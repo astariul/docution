@@ -8,14 +8,14 @@ with open('requirements.txt') as fr:
 
 
 setuptools.setup(
-    name="dummygummy",
+    name="docution",
     version="0.1",
     author="Nicolas REMOND",
-    author_email="nicolas.remond@42maru.com",
-    description="Short description of the package.",
+    author_email="nicolas@remond.co",
+    description="Host your API reference on Notion.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/colanim/python-repo",
+    url="https://github.com/astariul/docution",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3.6",

@@ -1,14 +1,14 @@
-<h1 align="center">dummygummy</h1>
-<p align="center">Short description of the package.</p>
+<h1 align="center">docution</h1>
+<p align="center">Host your API reference on Notion.</p>
 
-<p align="center"><a href="https://github.com/colanim/python-repo/actions"><img src="https://github.com/colanim/python-repo/workflows/tests/badge.svg" alt="test status" /></a></p>
+<p align="center"><a href="https://github.com/astariul/docution/actions"><img src="https://github.com/astariul/docution/workflows/tests/badge.svg" alt="test status" /></a></p>
 
 <h2 align="center">Install</h2>
 
 Simply run :
 
 ```console
-pip install git+https://github.com/colanim/python-repo.git
+pip install git+https://github.com/astariul/docution.git
 ```
 
 <h2 align="center">Contribute</h2>
@@ -29,19 +29,4 @@ Check if code is well-formated :
 pip install flake8
 
 flake8 . --count --max-complexity=10 --max-line-length=127 --statistics
-```
-
----
-
-Generate documentation with :
-
-```console
-pip install sphinx
-pip install sphinx_rtd_theme
-
-cd docs
-make html
-
-cd docs/_build/html/
-python3 -m http.server 8800
 ```
