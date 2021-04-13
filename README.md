@@ -11,6 +11,14 @@ Simply run :
 pip install git+https://github.com/astariul/docution.git
 ```
 
+<h2 align="center">Example</h2>
+
+Run :
+
+```console
+python -c "from docution import replace; replace(path='example')"
+```
+
 <h2 align="center">Contribute</h2>
 
 Ensure tests are passing :

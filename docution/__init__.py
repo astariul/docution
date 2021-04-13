@@ -1,34 +1,43 @@
-def hello_world():
-    """ This is a docstring
-
-    This docstring should be automatically documented with Sphinx.
-
-    Returns:
-        str: The string `Hello world`.
-    """
-    return "Hello world"
-
 import importlib
 import inspect
+
+import docutils
+from sphinx.ext.autodoc import FunctionDocumenter
 
 from notion.client import NotionClient
 from notion.block import TextBlock
 
+import docutils.nodes
+import docutils.parsers.rst
+import docutils.utils
+import docutils.frontend
 
-TOKEN_V2 = "3bb21c7d39dca675d46fd591887c6729ce2da95410504d85d25e904e01aaa6f936faf73a1c0b3e2b3816c09d1fb4b7b033db2ba897cc6c8c96c2958c9dcced0a4c33ea0a308993c7bb12623cc919"
+def parse_rst(text):
+    parser = docutils.parsers.rst.Parser()
+    components = (docutils.parsers.rst.Parser,)
+    settings = docutils.frontend.OptionParser(components=components).get_default_values()
+    document = docutils.utils.new_document('<rst-doc>', settings=settings)
+    parser.parse(text, document)
+    return document
+
+
+TOKEN_V2 = "52417b416b08d79fe8eb83bbc452776a5ae1a2bfa4a1739c1485f7c150724ccbb033270a3e53d2b0ca2d6e8da648569fa9afaf6d04a662e1ebfe37dce5c665a39946af5e50de91bf2c62481d04f4"
 NOTION_URL = "https://www.notion.so/"
 
 
-def replace(token=TOKEN_V2, link="Documentation-v2-3-e2a9e602adfe4de28d0b1bcb5b05254e", path="docution"):
+def replace(token=TOKEN_V2, link="Documentation-v2-3-37ea7fa0f86648af86a96c6dd4c75748", path="docution"):
     client = NotionClient(token_v2=token)
     page = client.get_block(NOTION_URL + link)
 
     thing = importlib.import_module(path)
     print(inspect.getdoc(thing))
     print(inspect.getdoc(thing.hello_world))
-    print(dir(thing))
 
     for child in page.children:
         if child.title == ".. automodule:: docution\n:members:":
+
+            doc = parse_rst(child.title)
+            print("\n", doc)
+
             x = child.children.add_new(TextBlock)
             x.title = inspect.getdoc(thing.hello_world)
