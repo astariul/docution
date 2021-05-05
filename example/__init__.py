@@ -20,10 +20,6 @@ Attributes:
         Either form is acceptable, but the two should not be mixed. Choose
         one convention to document module level variables and be consistent
         with it.
-
-Todo:
-    * For module TODOs
-    * You have to also use ``sphinx.ext.todo`` extension
     
 .. _Google Python Style Guide:
    http://google.github.io/styleguide/pyguide.html
@@ -80,13 +76,6 @@ def module_level_function(param1, param2=None, *args, **kwargs):
     If \*args or \*\*kwargs are accepted,
     they should be listed as ``*args`` and ``**kwargs``.
 
-    The format for a parameter is::
-        name (type): description
-            The description may span multiple lines. Following
-            lines should be indented. The "(type)" is optional.
-            Multiple paragraphs are supported in parameter
-            descriptions.
-
     Args:
         param1 (int): The first parameter.
         param2 (:obj:`str`, optional): The second parameter. Defaults to None.
@@ -129,6 +118,7 @@ def example_generator(n):
     Examples:
         Examples should be written in doctest format, and should illustrate how
         to use the function.
+        
         >>> print([i for i in example_generator(4)])
         [0, 1, 2, 3]
     """

@@ -76,9 +76,15 @@ def replace_old(token=TOKEN_V2, link="Documentation-v2-3-37ea7fa0f86648af86a96c6
 from pydoc import locate
 from docstring_parser import parse
 
+from docution.cloaks import get_cloak
 
-def test(thing="example.hello_world"):
+
+def test(thing="example"):
     obj = locate(thing)
+
+    import inspect
+    print(inspect.isdatadescriptor(thing))
+    print(inspect.isdatadescriptor(obj))
 
     docstring = parse(obj.__doc__)
 
@@ -99,12 +105,21 @@ def test(thing="example.hello_world"):
     print(docstring.deprecation)
 
 
-def document(block):
+def document(block, cloak):
     if block.title.startswith("/docution"):
-        print("Documenting {}".format(block.title))
+        thing = block.title.strip().split(" ")[1]
+
+        # TODO : use logguru instead
+        print("Documenting {}".format(thing))
+
+        obj = locate(thing)
+        docstring = parse(obj.__doc__)
+
+        cloak(obj, docstring).render(block)
+
     
     for child in block.children:
-        document(child)
+        document(child, cloak)
 
 
 def replace(token=TOKEN_V2, link="https://www.notion.so/Documentation-v2-3-f1969d7a8c224b799311a4485849d927"):
@@ -112,7 +127,9 @@ def replace(token=TOKEN_V2, link="https://www.notion.so/Documentation-v2-3-f1969
     client = NotionClient(token_v2=token)
     page = client.get_block(NOTION_URL + link)
 
-    document(page)
+    cloak = get_cloak()
+
+    document(page, cloak)
 
     # for child in page.children:
     #     print(child.children)
