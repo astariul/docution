@@ -73,16 +73,22 @@ def replace_old(token=TOKEN_V2, link="Documentation-v2-3-37ea7fa0f86648af86a96c6
 
 ##################################
 
+import inspect
+import re
 from pydoc import locate
-from docstring_parser import parse
 
-from docution.cloaks import get_cloak
+from docstring_parser import parse
+from sphinx.pycode import ModuleAnalyzer
+
+from docution.cloaks import NotionCloak
+
+
+CMD_REGEX = re.compile(r" */docution +(\S+) *")
 
 
 def test(thing="example"):
     obj = locate(thing)
 
-    import inspect
     print(inspect.isdatadescriptor(thing))
     print(inspect.isdatadescriptor(obj))
 
@@ -105,39 +111,45 @@ def test(thing="example"):
     print(docstring.deprecation)
 
 
+def resolve(thing):
+    obj = locate(thing)
+
+    if inspect.ismodule(obj) or inspect.isclass(obj) or inspect.isroutine(obj):
+        return obj, obj.__doc__
+    else:
+        # Try to get the comments acting as docstring, similarly to Sphinx
+        module_name = ".".join(thing.split(".")[:-1])
+        data_name = thing.split(".")[-1]
+
+        analyzer = ModuleAnalyzer.for_module(module_name)
+        analyzer.analyze()
+        key = ("", data_name)
+        if key in analyzer.attr_docs:
+            return obj, "\n".join(analyzer.attr_docs[key])
+        else:
+            return obj, ""
+
+
 def document(block, cloak):
-    if block.title.startswith("/docution"):
-        thing = block.title.strip().split(" ")[1]
+    m = CMD_REGEX.match(block.title)
+    if m:
+        thing = m.group(1)
 
         # TODO : use logguru instead
         print("Documenting {}".format(thing))
 
-        obj = locate(thing)
-        docstring = parse(obj.__doc__)
+        obj, docstring = resolve(thing)
+        docstring = parse(docstring)
 
-        cloak(obj, docstring).render(block)
-
+        cloak(thing, obj, docstring).render(block)
     
     for child in block.children:
         document(child, cloak)
 
 
-def replace(token=TOKEN_V2, link="https://www.notion.so/Documentation-v2-3-f1969d7a8c224b799311a4485849d927"):
+def replace(token=TOKEN_V2, link="https://www.notion.so/Documentation-v2-5-84e29fcb37cf44658db5853f821ebd0c"):
     register_directives()
     client = NotionClient(token_v2=token)
     page = client.get_block(NOTION_URL + link)
 
-    cloak = get_cloak()
-
-    document(page, cloak)
-
-    # for child in page.children:
-    #     print(child.children)
-    #     print(child.title)
-        # if child.title == ".. automodule:: docution\n:members:":
-
-        #     doc = parse_rst(child.title)
-        #     print("\n", doc)
-
-        #     x = child.children.add_new(TextBlock)
-        #     x.title = inspect.getdoc(thing.hello_world)
+    document(page, NotionCloak)

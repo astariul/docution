@@ -3,8 +3,9 @@ import inspect
 from notion.block import TextBlock
 
 
-class BaseCloak():
-    def __init__(self, thing, docstring):
+class NotionCloak():
+    def __init__(self, name, thing, docstring):
+        self.name = name
         self.thing = thing
         self.ds = docstring
 
@@ -15,10 +16,8 @@ class BaseCloak():
             self.render_class(block)
         elif inspect.isroutine(self.thing):
             self.render_routine(block)
-        elif inspect.isdatadescriptor(self.thing):
-            self.render_data(block)
         else:
-            raise ValueError("Unknown type : {}".format(type(self.thing)))
+            self.render_data(block)
             
     def render_lol(self, block):
         try:
@@ -62,16 +61,28 @@ class BaseCloak():
             content += "{}|{}:{}\n".format(self.ds.returns.return_name, self.ds.returns.type_name, self.ds.returns.description)
 
 
-        # Create a new block and add it after this one
-        # TODO : later, replace the block completely
-        b = block.children.add_new(TextBlock, title=content)
-        b.move_to(block, "after")
+        # Add the content to the current block
+        # TODO later replace the content instead of adding it
+        block.title += "\n" + content
 
     render_module = render_class = render_routine = render_lol
 
     def render_data(self, block):
-        # Create a new block and add it after this one
-        # TODO : later, replace the block completely
-        content = inspect.getcomments(self.thing)
-        b = block.children.add_new(TextBlock, title=content)
-        b.move_to(block, "after")
+        content = self.name.split(".")[-1] + " = " + str(self.thing)
+        content += "\n"
+        if self.ds.short_description:
+            # TODO : find a better way ? docstring parser can't handle it for now..
+            if ":" in self.ds.short_description:
+                dtype, desc = self.ds.short_description.split(":")
+            else:
+                dtype = None
+                desc = self.ds.short_description
+            content += desc + "|" + dtype
+            content += "\n\n"
+        if self.ds.long_description:
+            content += self.ds.long_description
+            content += "\n\n"
+
+        # Add the content to the current block
+        # TODO later replace the content instead of adding it
+        block.title += "\n" + content
