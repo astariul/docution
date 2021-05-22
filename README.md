@@ -43,6 +43,7 @@ flake8 . --count --max-complexity=10 --max-line-length=127 --statistics
 
 A few things are not supported yet by the official Notion API, and will need to be added in the future :
 
-[] **Deletion of the cmd block (`/docution my_module` for example).** For now the API doesn't support deletion, so we can't remove these blocks. Later it should be removed.
-[] **Add dividers.** Dividers are needed to have cleaner outputs. For now the API supports only text-based blocks, so we can't do that.
-[] **Remove recursion.** To access all the blocks of a page, we need to recursively call the API, for each children of children of children of ... This is inefficient. Later we should reduce that number of calls and just call the API once, retrieve everything, create everything, update the content with 1 call.
+
+- [ ] **Deletion of the cmd block (`/docution my_module` for example).** For now the API doesn't support deletion, so we can't remove these blocks. Later it should be removed.
+- [ ] **Add dividers.** Dividers are needed to have cleaner outputs. For now the API supports only text-based blocks, so we can't do that.
+- [ ] **Remove recursion.** To access all the blocks of a page, we need to recursively call the API, for each children of children of children of ... This is inefficient. Later we should reduce that number of calls and just call the API once, retrieve everything, create everything, update the content with 1 call.
