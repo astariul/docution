@@ -1,0 +1,132 @@
+import inspect
+
+
+class BasePacker:
+    def __init__(self, notion, color="blue_background"):
+        """Default Packer. A Packer is a class that convert documentation to
+        Notion blocks.
+
+        Args:
+            notion (docution.NotionAPI): Notion API wrapper.
+            color (str, optional): Color of text to use for the signatures.
+                Defaults to "blue_background".
+        """
+        self.notion = notion
+        self.color = color
+
+    def pack(self, name, thing, docstring, block):
+        """General function, packing whatever is given as input into Notion,
+        under the given block. Based on the type of the object to document,
+        this method calls the right method for documenting it.
+
+        Args:
+            name (str): Name of the object to document.
+            thing (obj): Object to document.
+            docstring (docstring_parser.Docstring): Parsed doctring of the
+                object to document.
+            block (dict): Notion block descriptor.
+        """
+        if inspect.ismodule(thing):
+            self.pack_module(name, thing, docstring, block)
+        elif inspect.isclass(thing):
+            self.pack_class(name, thing, docstring, block)
+        elif inspect.isroutine(thing):
+            self.pack_routine(name, thing, docstring, block)
+        else:
+            self.pack_data(name, thing, docstring, block)
+
+    def pack_data(self, name, thing, docstring, block):
+        # Extract info
+        var_name = name.split(".")[-1]
+        value = str(thing)
+
+        # Try to extract type from docstring
+        dtype, desc = None, None
+        if docstring.short_description:
+            # TODO : find a better way ? docstring parser can't handle these for now..
+            if ":" in docstring.short_description:
+                dtype, desc = docstring.short_description.split(":", 1)
+            else:
+                desc = docstring.short_description
+
+        # Create the signature
+        sig_block = self.empty_paragraph_block()
+        sig_block["paragraph"]["text"].append(self.text_block(f" {var_name}", bold=True, color=self.color))
+        sig_block["paragraph"]["text"].append(self.text_block(f" = {value} ", italic=True, color=self.color))
+        if dtype is not None:
+            sig_block["paragraph"]["text"].append(self.text_block("    "))
+            sig_block["paragraph"]["text"].append(self.text_block(dtype, code=True, color="red"))
+        
+        # Add signature
+        self.notion.add_child_to(block["id"], [sig_block])
+
+        # Retrieve the signature block we just created, to get his ID
+        # To do this, we need to access the last child of the parent block
+        *_, sig_block = self.notion.block_iterator(block["id"])
+
+        # Add the description of the data
+        desc_blocks = []
+        if desc is not None:
+            desc_block = self.empty_paragraph_block()
+            desc_block["paragraph"]["text"].append(self.text_block(desc))
+            desc_blocks.append(desc_block)
+        if docstring.long_description:
+            desc_block = self.empty_paragraph_block()
+            desc_block["paragraph"]["text"].append(self.text_block(docstring.long_description))
+            desc_blocks.append(desc_block)
+        self.notion.add_child_to(sig_block["id"], desc_blocks)
+
+    def pack_routine(self, name, thing, docstring, block):
+        pass
+
+    def pack_class(self, name, thing, docstring, block):
+        pass
+
+    def pack_module(self, name, thing, docstring, block):
+        pass
+
+    def empty_paragraph_block(self):
+        """Create a paragraph-type block with nothing inside.
+
+        Returns:
+            dict: Block descriptor for an empty paragraph.
+        """
+        return {
+            "object": "block",
+            "type": "paragraph",
+            "paragraph": {"text": []}
+        }
+
+    def text_block(self, content, bold=False, italic=False, strikethrough=False, underline=False, code=False,
+                   color="default"):
+        """Create a Rich text object with the given content and given annotations.
+
+        Args:
+            content (str): Text content.
+            bold (bool, optional): Is the text bold ? Defaults to False.
+            italic (bool, optional): Is the text italized ? Defaults to False.
+            strikethrough (bool, optional): Is the text crossed ? Defaults to False.
+            underline (bool, optional): Is the text underlined ? Defaults to False.
+            code (bool, optional): Is the text code ? Defaults to False.
+            color (str, optional): Color of the text. Defaults to "default".
+
+        Returns:
+            dict: Rich-text object descriptor.
+        """
+        annotations = {"color": color}
+        if bold:
+            annotations["bold"] = True
+        if italic:
+            annotations["italic"] = True
+        if strikethrough:
+            annotations["strikethrough"] = True
+        if underline:
+            annotations["underline"] = True
+        if code:
+            annotations["code"] = True
+
+        return {
+            "type": "text",
+            "text": {"content": content},
+            "annotations": annotations
+        }
