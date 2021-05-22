@@ -1,78 +1,3 @@
-import importlib
-import inspect
-
-import docutils
-from sphinx.ext.autodoc import ModuleDocumenter, ClassDocumenter, ExceptionDocumenter, DataDocumenter, NewTypeDataDocumenter, FunctionDocumenter, DecoratorDocumenter, MethodDocumenter, AttributeDocumenter, PropertyDocumenter, NewTypeAttributeDocumenter
-
-from notion.client import NotionClient
-from notion.block import TextBlock
-
-import docutils.nodes
-import docutils.parsers.rst
-import docutils.utils
-import docutils.frontend
-from sphinx.util import docutils as sdocutils
-
-def parse_rst(text):
-    parser = docutils.parsers.rst.Parser()
-    components = (docutils.parsers.rst.Parser,)
-    settings = docutils.frontend.OptionParser(components=components).get_default_values()
-    document = docutils.utils.new_document('<rst-doc>', settings=settings)
-    parser.parse(text, document)
-    return document
-
-
-TOKEN_V2 = "52417b416b08d79fe8eb83bbc452776a5ae1a2bfa4a1739c1485f7c150724ccbb033270a3e53d2b0ca2d6e8da648569fa9afaf6d04a662e1ebfe37dce5c665a39946af5e50de91bf2c62481d04f4"
-NOTION_URL = "https://www.notion.so/"
-
-
-from sphinx.ext.autodoc.directive import AutodocDirective
-
-
-def register_directives():
-    def _register(cls):
-        name = 'auto' + cls.objtype
-        assert not sdocutils.is_directive_registered(name)
-        sdocutils.register_directive(name, AutodocDirective)
-
-    _register(ModuleDocumenter)
-    _register(ClassDocumenter)
-    _register(ExceptionDocumenter)
-    _register(DataDocumenter)
-    _register(NewTypeDataDocumenter)
-    _register(FunctionDocumenter)
-    _register(DecoratorDocumenter)
-    _register(MethodDocumenter)
-    _register(AttributeDocumenter)
-    _register(PropertyDocumenter)
-    _register(NewTypeAttributeDocumenter)
-
-    
-
-
-def replace_old(token=TOKEN_V2, link="Documentation-v2-3-37ea7fa0f86648af86a96c6dd4c75748", path="docution"):
-    register_directives()
-    client = NotionClient(token_v2=token)
-    page = client.get_block(NOTION_URL + link)
-
-    thing = importlib.import_module(path)
-    print(inspect.getdoc(thing))
-    print(inspect.getdoc(thing.hello_world))
-
-    for child in page.children:
-        if child.title == ".. automodule:: docution\n:members:":
-
-            doc = parse_rst(child.title)
-            print("\n", doc)
-
-            x = child.children.add_new(TextBlock)
-            x.title = inspect.getdoc(thing.hello_world)
-
-
-
-
-##################################
-
 import inspect
 import re
 from pydoc import locate
@@ -84,6 +9,8 @@ from docution.cloaks import NotionCloak
 
 
 CMD_REGEX = re.compile(r" */docution +(\S+) *")
+TOKEN_V2 = "52417b416b08d79fe8eb83bbc452776a5ae1a2bfa4a1739c1485f7c150724ccbb033270a3e53d2b0ca2d6e8da648569fa9afaf6d04a662e1ebfe37dce5c665a39946af5e50de91bf2c62481d04f4"
+NOTION_URL = "https://www.notion.so/"
 
 
 def test(thing="example"):
@@ -153,3 +80,89 @@ def replace(token=TOKEN_V2, link="https://www.notion.so/Documentation-v2-5-84e29
     page = client.get_block(NOTION_URL + link)
 
     document(page, NotionCloak)
+
+
+
+####################################
+import os
+import re
+from pydoc import locate
+
+from docstring_parser import parse
+from sphinx.pycode import ModuleAnalyzer
+
+from docution.notion_api import NotionAPI
+from docution.packer import BasePacker
+
+
+CMD_REGEX = re.compile(r" */docution +(\S+) *")
+
+
+def resolve(thing):
+    obj = locate(thing)
+
+    if inspect.ismodule(obj) or inspect.isclass(obj) or inspect.isroutine(obj):
+        return obj, obj.__doc__
+    else:
+        # Typically module attribute, there is no docstring, but a comment acting
+        # as a docstring. Try to get this comment, similarly to Sphinx
+        module_name = ".".join(thing.split(".")[:-1])
+        data_name = thing.split(".")[-1]
+
+        analyzer = ModuleAnalyzer.for_module(module_name)
+        analyzer.analyze()
+        key = ("", data_name)
+        if key in analyzer.attr_docs:
+            return obj, "\n".join(analyzer.attr_docs[key])
+        else:
+            return obj, ""
+
+
+def clean_docstring(ds):
+    if ds.short_description:
+        ds.short_description = ds.short_description.replace("\n", " ")
+    if ds.long_description:
+        ds.long_description = ds.long_description.replace("\n", " ")
+    if len(ds.params) != 0:
+        for p in ds.params:
+            p.description = p.description.replace("\n", " ")
+    if len(ds.raises) != 0:
+        for p in ds.raises:
+            p.description = p.description.replace("\n", " ")
+    if ds.returns:
+        ds.returns.description = ds.returns.description.replace("\n", " ")
+
+    return ds
+
+
+
+def auto_document(auth_token, page_id):
+    notion = NotionAPI(auth_token)
+    packer = BasePacker(notion)
+
+    # Iterate all blocks and if we recognize a docution CMD, document them
+    for block in notion.all_children_iterator(page_id):
+        # Replace content only if it's a basic text block without childrens
+        if block["type"] != "paragraph" or block["has_children"]:
+            continue
+
+        text = block["paragraph"]["text"][0]["plain_text"]
+
+        m = CMD_REGEX.match(text)
+        if m:
+            thing = m.group(1)
+
+            # TODO : use logguru instead
+            print("Documenting {}".format(thing))
+
+            obj, docstring = resolve(thing)
+            docstring = clean_docstring(parse(docstring))
+
+            packer.pack(thing, obj, docstring, block)
+
+
+if __name__ == "__main__":
+    token = os.environ["NOTION_TOKEN"]
+    page = "3c57d5c780a942e187d615bca8767f76"
+
+    auto_document(token, page)
