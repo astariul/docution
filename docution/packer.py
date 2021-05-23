@@ -232,7 +232,7 @@ class BasePacker:
         else:
             desc_block = block
 
-        # Add module level variables
+        # Add module level variables, not nested
         for p in docstring.params:
             # Add kind of signature
             p_block = self.empty_paragraph_block()
@@ -242,12 +242,12 @@ class BasePacker:
                 p_block["paragraph"]["text"].append(self.text_block(p.type_name, code=True, color="red"))
 
             # Add signature
-            self.notion.add_child_to(desc_block["id"], [p_block])
+            self.notion.add_child_to(block["id"], [p_block])
 
             if p.description is not None:
                 # Retrieve the signature block we just created, to get his ID
                 # To do this, we need to access the last child of the parent block
-                *_, sig_block = self.notion.block_iterator(desc_block["id"])
+                *_, sig_block = self.notion.block_iterator(block["id"])
 
                 # Add the description of the data
                 d_block = self.empty_paragraph_block()

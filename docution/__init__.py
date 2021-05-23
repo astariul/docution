@@ -124,8 +124,9 @@ def clean_docstring(ds):
             # Remove single new lines, and replace them by space
             x = re.sub(r"([^\n])\n([^\n])", r"\g<1> \g<2>", x)
 
-            # Normalize double new lines
+            # Normalize double new lines and spaces
             x = re.sub(r"\n+", "\n\n", x)
+            x = re.sub(r"[ \t\r]+", " ", x)
         return x
 
     ds.short_description = _clean(ds.short_description)
