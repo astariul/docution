@@ -51,13 +51,12 @@ class BasePacker:
         value = str(thing)
 
         # Try to extract type from docstring
-        dtype, desc = None, None
+        dtype = None
         if docstring.short_description:
             # TODO : find a better way ? docstring parser can't handle these for now..
             if ":" in docstring.short_description:
                 dtype, desc = docstring.short_description.split(":", 1)
-            else:
-                desc = docstring.short_description
+                docstring.short_description = desc.strip()
 
         # Create the signature
         sig_block = self.empty_paragraph_block()
@@ -75,16 +74,9 @@ class BasePacker:
         *_, sig_block = self.notion.block_iterator(block["id"])
 
         # Add the description of the data
-        desc_blocks = []
-        if desc is not None:
-            desc_block = self.empty_paragraph_block()
-            desc_block["paragraph"]["text"].append(self.text_block(desc))
-            desc_blocks.append(desc_block)
-        if docstring.long_description:
-            desc_block = self.empty_paragraph_block()
-            desc_block["paragraph"]["text"].append(self.text_block(docstring.long_description))
-            desc_blocks.append(desc_block)
-        self.notion.add_child_to(sig_block["id"], desc_blocks)
+        desc_blocks = self.get_description_blocks(docstring)
+        if len(desc_blocks) > 0:
+            self.notion.add_child_to(sig_block["id"], desc_blocks)
 
     def pack_routine(self, name, thing, docstring, block):
         """Method to pack routine (methods and functions) into Notion. This
@@ -101,7 +93,6 @@ class BasePacker:
         sig_name = str(thing.__name__)
         s = inspect.signature(thing)
         sig_params = str(s).replace("->", "→")
-        params = s.parameters.values()
 
         # Create the signature
         sig_block = self.empty_paragraph_block()
@@ -116,75 +107,43 @@ class BasePacker:
         *_, sig_block = self.notion.block_iterator(block["id"])
 
         # Add descriptions
-        desc_blocks = []
-        if docstring.short_description:
-            desc_block = self.empty_paragraph_block()
-            desc_block["paragraph"]["text"].append(self.text_block(docstring.short_description))
-            desc_blocks.append(desc_block)
-        if docstring.long_description:
-            descs = docstring.long_description.split("\n\n")
-            for d in descs:
-                desc_block = self.empty_paragraph_block()
-                desc_block["paragraph"]["text"].append(self.text_block(d))
-                desc_blocks.append(desc_block)
-        self.notion.add_child_to(sig_block["id"], desc_blocks)
+        desc_blocks = self.get_description_blocks(docstring)
+        if len(desc_blocks) > 0:
+            self.notion.add_child_to(sig_block["id"], desc_blocks)
 
-        # Retrieve last description block
-        *_, desc_block = self.notion.block_iterator(sig_block["id"])
+            # Retrieve last description block
+            *_, desc_block = self.notion.block_iterator(sig_block["id"])
+        else:
+            desc_block = sig_block
 
         # Add parameters
         if len(docstring.params) > 0:
-            param_block = self.empty_paragraph_block()
-            param_block["paragraph"]["text"].append(self.text_block("Parameters :", underline=True))
+            param_block = self.header_block("Parameters :")
             self.notion.add_child_to(desc_block["id"], [param_block])
 
             # Retrieve the parameter block
             *_, param_block = self.notion.block_iterator(desc_block["id"])
 
             # Append each parameters
-            p_blocks = []
-            for p, sig_p in zip(docstring.params, params):
-                p_block = self.empty_paragraph_block()
-                p_block["paragraph"]["text"].append(self.text_block(f"{p.arg_name} ", bold=True))
-                sp = ""
-                if p.type_name is not None:
-                    p_block["paragraph"]["text"].append(self.text_block(p.type_name, code=True, color="red"))
-                    sp = " "
-                if sig_p.default != inspect.Parameter.empty:
-                    p_block["paragraph"]["text"].append(self.text_block(f"{sp}optional ", italic=True))
-                    sp = ""
-                if p.description is not None:
-                    p_block["paragraph"]["text"].append(self.text_block(f"{sp}: {p.description}"))
-                p_blocks.append(p_block)
-
+            p_blocks = self.get_params_blocks(docstring, s)
             self.notion.add_child_to(param_block["id"], p_blocks)
 
         # Add raises
         if len(docstring.raises) > 0:
-            raise_block = self.empty_paragraph_block()
-            raise_block["paragraph"]["text"].append(self.text_block("Raises :", underline=True))
+            raise_block = self.header_block("Raises :")
             self.notion.add_child_to(desc_block["id"], [raise_block])
 
             # Retrieve the raise block
             *_, raise_block = self.notion.block_iterator(desc_block["id"])
 
             # Append each raises
-            r_blocks = []
-            for r in docstring.raises:
-                r_block = self.empty_paragraph_block()
-                r_block["paragraph"]["text"].append(self.text_block(f"{r.type_name} ", bold=True))
-                if r.description is not None:
-                    r_block["paragraph"]["text"].append(self.text_block(f": {r.description}"))
-                r_blocks.append(r_block)
-
+            r_blocks = self.get_raises_blocks(docstring)
             self.notion.add_child_to(raise_block["id"], r_blocks)
 
         # Add returns
         if docstring.returns is not None:
             returns = docstring.returns
-            ret_block = self.empty_paragraph_block()
-            title = "Yields" if returns.is_generator else "Returns"
-            ret_block["paragraph"]["text"].append(self.text_block(f"{title} :", underline=True))
+            ret_block = self.header_block("Yields :" if returns.is_generator else "Returns :")
 
             if returns.type_name is not None:
                 ret_block["paragraph"]["text"].append(self.text_block("    "))
@@ -206,6 +165,93 @@ class BasePacker:
 
     def pack_module(self, name, thing, docstring, block):
         pass
+
+    def get_description_blocks(self, docstring):
+        """Method to create Notion blocks corresponding to the descriptions
+        (short and long) of the given docstring.
+
+        Args:
+            docstring (docstring_parser.Docstring): Doctring to convert.
+
+        Returns:
+            list of dict: Notion blocks corresponding to the description of the
+                docstring.
+        """
+        desc_blocks = []
+        if docstring.short_description:
+            desc_block = self.empty_paragraph_block()
+            desc_block["paragraph"]["text"].append(self.text_block(docstring.short_description))
+            desc_blocks.append(desc_block)
+        if docstring.long_description:
+            descs = docstring.long_description.split("\n\n")
+            for d in descs:
+                desc_block = self.empty_paragraph_block()
+                desc_block["paragraph"]["text"].append(self.text_block(d))
+                desc_blocks.append(desc_block)
+        return desc_blocks
+
+    def get_params_blocks(self, docstring, signature):
+        """Method to create Notion blocks corresponding to the parameters of
+        the given docstring. Signature is necessary as well to check for
+        optional parameters.
+
+        Args:
+            docstring (docstring_parser.Docstring): Doctring to convert.
+            signature (inspect.Signature): Signature object of the
+                corresponding object.
+
+        Returns:
+            list of dict: Notion blocks corresponding to the parameters of the
+                docstring.
+        """
+        p_blocks = []
+        for p, sig_p in zip(docstring.params, signature.parameters.values()):
+            p_block = self.empty_paragraph_block()
+            p_block["paragraph"]["text"].append(self.text_block(f"{p.arg_name} ", bold=True))
+            sp = ""
+            if p.type_name is not None:
+                p_block["paragraph"]["text"].append(self.text_block(p.type_name, code=True, color="red"))
+                sp = " "
+            if sig_p.default != inspect.Parameter.empty:
+                p_block["paragraph"]["text"].append(self.text_block(f"{sp}optional ", italic=True))
+                sp = ""
+            if p.description is not None:
+                p_block["paragraph"]["text"].append(self.text_block(f"{sp}: {p.description}"))
+            p_blocks.append(p_block)
+        return p_blocks
+
+    def get_raises_blocks(self, docstring):
+        """Method to create Notion blocks corresponding to the raises of
+        the given docstring.
+
+        Args:
+            docstring (docstring_parser.Docstring): Doctring to convert.
+
+        Returns:
+            list of dict: Notion blocks corresponding to the raises of the
+                docstring.
+        """
+        r_blocks = []
+        for r in docstring.raises:
+            r_block = self.empty_paragraph_block()
+            r_block["paragraph"]["text"].append(self.text_block(f"{r.type_name} ", bold=True))
+            if r.description is not None:
+                r_block["paragraph"]["text"].append(self.text_block(f": {r.description}"))
+            r_blocks.append(r_block)
+        return r_blocks
+
+    def header_block(self, content):
+        """Method to create a Notion block for a header (underlined text).
+
+        Args:
+            content (str): Content of the header.
+
+        Returns:
+            dict: Notion block for the header.
+        """
+        h_block = self.empty_paragraph_block()
+        h_block["paragraph"]["text"].append(self.text_block(content, underline=True))
+        return h_block
 
     def empty_paragraph_block(self):
         """Create a paragraph-type block with nothing inside.
