@@ -161,6 +161,16 @@ class BasePacker:
                 self.notion.add_child_to(ret_block["id"], [r_block])
 
     def pack_class(self, name, thing, docstring, block):
+        """Method to pack classes into Notion. This method will create Notion
+        blocks in the page.
+
+        Args:
+            name (str): Name of the object to document.
+            thing (obj): Object to document.
+            docstring (docstring_parser.Docstring): Parsed doctring of the
+                object to document.
+            block (dict): Notion block descriptor.
+        """
         # Extract info
         cls_name = str(thing.__name__)
         s = inspect.signature(thing)
@@ -201,10 +211,48 @@ class BasePacker:
             p_blocks = self.get_params_blocks(docstring, s)
             self.notion.add_child_to(param_block["id"], p_blocks)
 
-        print(docstring.__dir__())
-
     def pack_module(self, name, thing, docstring, block):
-        pass
+        """Method to pack modules into Notion. This method will create Notion
+        blocks in the page.
+
+        Args:
+            name (str): Name of the object to document.
+            thing (obj): Object to document.
+            docstring (docstring_parser.Docstring): Parsed doctring of the
+                object to document.
+            block (dict): Notion block descriptor.
+        """
+        # Add description directly, don't put the name of the module.
+        desc_blocks = self.get_description_blocks(docstring)
+        if len(desc_blocks) > 0:
+            self.notion.add_child_to(block["id"], desc_blocks)
+
+            # Retrieve last description block
+            *_, desc_block = self.notion.block_iterator(block["id"])
+        else:
+            desc_block = block
+
+        # Add module level variables
+        for p in docstring.params:
+            # Add kind of signature
+            p_block = self.empty_paragraph_block()
+            p_block["paragraph"]["text"].append(self.text_block(f" {p.arg_name} ", bold=True, color=self.color))
+            if p.type_name is not None:
+                p_block["paragraph"]["text"].append(self.text_block("    "))
+                p_block["paragraph"]["text"].append(self.text_block(p.type_name, code=True, color="red"))
+
+            # Add signature
+            self.notion.add_child_to(desc_block["id"], [p_block])
+
+            if p.description is not None:
+                # Retrieve the signature block we just created, to get his ID
+                # To do this, we need to access the last child of the parent block
+                *_, sig_block = self.notion.block_iterator(desc_block["id"])
+
+                # Add the description of the data
+                d_block = self.empty_paragraph_block()
+                d_block["paragraph"]["text"].append(self.text_block(p.description))
+                self.notion.add_child_to(sig_block["id"], [d_block])
 
     def get_description_blocks(self, docstring):
         """Method to create Notion blocks corresponding to the descriptions
