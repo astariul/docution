@@ -139,7 +139,7 @@ class ExampleError(Exception):
     
     Args:
         msg (str): Human readable string describing the exception.
-        code (:obj:`int`, optional): Error code.
+        code (int, optional): Error code.
     
     Attributes:
         msg (str): Human readable string describing the exception.
@@ -164,7 +164,7 @@ class ExampleClass(object):
 
     Attributes:
         attr1 (str): Description of `attr1`.
-        attr2 (:obj:`int`, optional): Description of `attr2`.
+        attr2 (int, optional): Description of `attr2`.
     """
 
     def __init__(self, param1, param2, param3):
@@ -181,9 +181,9 @@ class ExampleClass(object):
         
         Args:
             param1 (str): Description of `param1`.
-            param2 (:obj:`int`, optional): Description of `param2`. Multiple
+            param2 (int, optional): Description of `param2`. Multiple
                 lines are supported.
-            param3 (:obj:`list` of :obj:`str`): Description of `param3`.
+            param3 (list of str): Description of `param3`.
         """
         self.attr1 = param1
         self.attr2 = param2

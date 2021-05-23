@@ -161,7 +161,47 @@ class BasePacker:
                 self.notion.add_child_to(ret_block["id"], [r_block])
 
     def pack_class(self, name, thing, docstring, block):
-        pass
+        # Extract info
+        cls_name = str(thing.__name__)
+        s = inspect.signature(thing)
+        cls_params = str(s)
+
+        # Create the signature
+        sig_block = self.empty_paragraph_block()
+        sig_block["paragraph"]["text"].append(self.text_block(" class", italic=True, color=self.color))
+        sig_block["paragraph"]["text"].append(self.text_block(f" {cls_name}", bold=True, color=self.color))
+        sig_block["paragraph"]["text"].append(self.text_block(f" {cls_params} ", italic=True, color=self.color))
+
+        # Add signature
+        self.notion.add_child_to(block["id"], [sig_block])
+
+        # Retrieve the signature block we just created, to get his ID
+        # To do this, we need to access the last child of the parent block
+        *_, sig_block = self.notion.block_iterator(block["id"])
+
+        # Add descriptions
+        desc_blocks = self.get_description_blocks(docstring)
+        if len(desc_blocks) > 0:
+            self.notion.add_child_to(sig_block["id"], desc_blocks)
+
+            # Retrieve last description block
+            *_, desc_block = self.notion.block_iterator(sig_block["id"])
+        else:
+            desc_block = sig_block
+
+        # Add parameters
+        if len(docstring.params) > 0:
+            param_block = self.header_block("Parameters :")
+            self.notion.add_child_to(desc_block["id"], [param_block])
+
+            # Retrieve the parameter block
+            *_, param_block = self.notion.block_iterator(desc_block["id"])
+
+            # Append each parameters
+            p_blocks = self.get_params_blocks(docstring, s)
+            self.notion.add_child_to(param_block["id"], p_blocks)
+
+        print(docstring.__dir__())
 
     def pack_module(self, name, thing, docstring, block):
         pass
