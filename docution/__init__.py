@@ -119,21 +119,25 @@ def resolve(thing):
 
 
 def clean_docstring(ds):
-    if ds.short_description:
-        ds.short_description = ds.short_description.replace("\n", " ")
-    if ds.long_description:
-        ds.long_description = ds.long_description.replace("\n", " ")
-    if len(ds.params) != 0:
-        for p in ds.params:
-            p.description = p.description.replace("\n", " ")
-    if len(ds.raises) != 0:
-        for p in ds.raises:
-            p.description = p.description.replace("\n", " ")
+    def _clean(x):
+        if x:
+            # Remove single new lines, and replace them by space
+            x = re.sub(r"([^\n])\n([^\n])", r"\g<1> \g<2>", x)
+
+            # Normalize double new lines
+            x = re.sub(r"\n+", "\n\n", x)
+        return x
+
+    ds.short_description = _clean(ds.short_description)
+    ds.long_description = _clean(ds.long_description)
+    for p in ds.params:
+        p.description = _clean(p.description)
+    for r in ds.raises:
+        r.description = _clean(r.description)
     if ds.returns:
-        ds.returns.description = ds.returns.description.replace("\n", " ")
+        ds.returns.description = _clean(ds.returns.description)
 
     return ds
-
 
 
 def auto_document(auth_token, page_id):

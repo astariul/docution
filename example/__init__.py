@@ -78,7 +78,7 @@ def module_level_function(param1, param2=None, *args, **kwargs):
 
     Args:
         param1 (int): The first parameter.
-        param2 (:obj:`str`, optional): The second parameter. Defaults to None.
+        param2 (str, optional): The second parameter. Defaults to None.
             Second line of description should be indented.
         *args: Variable length argument list.
         **kwargs: Arbitrary keyword arguments.
