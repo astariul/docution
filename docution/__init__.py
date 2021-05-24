@@ -86,64 +86,19 @@ def replace(token=TOKEN_V2, link="https://www.notion.so/Documentation-v2-5-84e29
 ####################################
 import os
 import re
-from pydoc import locate
-
-from docstring_parser import parse
-from sphinx.pycode import ModuleAnalyzer
 
 from docution.notion_api import NotionAPI
 from docution.packer import BasePacker
+from docution.documenter import Documenter
 
 
 CMD_REGEX = re.compile(r" */docution +(\S+) *")
 
 
-def resolve(thing):
-    obj = locate(thing)
-
-    if inspect.ismodule(obj) or inspect.isclass(obj) or inspect.isroutine(obj):
-        return obj, obj.__doc__
-    else:
-        # Typically module attribute, there is no docstring, but a comment acting
-        # as a docstring. Try to get this comment, similarly to Sphinx
-        module_name = ".".join(thing.split(".")[:-1])
-        data_name = thing.split(".")[-1]
-
-        analyzer = ModuleAnalyzer.for_module(module_name)
-        analyzer.analyze()
-        key = ("", data_name)
-        if key in analyzer.attr_docs:
-            return obj, "\n".join(analyzer.attr_docs[key])
-        else:
-            return obj, ""
-
-
-def clean_docstring(ds):
-    def _clean(x):
-        if x:
-            # Remove single new lines, and replace them by space
-            x = re.sub(r"([^\n])\n([^\n])", r"\g<1> \g<2>", x)
-
-            # Normalize double new lines and spaces
-            x = re.sub(r"\n+", "\n\n", x)
-            x = re.sub(r"[ \t\r]+", " ", x)
-        return x
-
-    ds.short_description = _clean(ds.short_description)
-    ds.long_description = _clean(ds.long_description)
-    for p in ds.params:
-        p.description = _clean(p.description)
-    for r in ds.raises:
-        r.description = _clean(r.description)
-    if ds.returns:
-        ds.returns.description = _clean(ds.returns.description)
-
-    return ds
-
-
 def auto_document(auth_token, page_id):
     notion = NotionAPI(auth_token)
     packer = BasePacker(notion)
+    documenter = Documenter(packer)
 
     # Iterate all blocks and if we recognize a docution CMD, document them
     for block in notion.all_children_iterator(page_id):
@@ -160,10 +115,7 @@ def auto_document(auth_token, page_id):
             # TODO : use logguru instead
             print("Documenting {}".format(thing))
 
-            obj, docstring = resolve(thing)
-            docstring = clean_docstring(parse(docstring))
-
-            packer.pack(thing, obj, docstring, block)
+            documenter(thing, block)
 
 
 if __name__ == "__main__":

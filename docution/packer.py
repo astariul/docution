@@ -14,27 +14,6 @@ class BasePacker:
         self.notion = notion
         self.color = color
 
-    def pack(self, name, thing, docstring, block):
-        """General function, packing whatever is given as input into Notion,
-        under the given block. Based on the type of the object to document,
-        this method calls the right method for documenting it.
-
-        Args:
-            name (str): Name of the object to document.
-            thing (obj): Object to document.
-            docstring (docstring_parser.Docstring): Parsed doctring of the
-                object to document.
-            block (dict): Notion block descriptor.
-        """
-        if inspect.ismodule(thing):
-            self.pack_module(name, thing, docstring, block)
-        elif inspect.isclass(thing):
-            self.pack_class(name, thing, docstring, block)
-        elif inspect.isroutine(thing):
-            self.pack_routine(name, thing, docstring, block)
-        else:
-            self.pack_data(name, thing, docstring, block)
-
     def pack_data(self, name, thing, docstring, block):
         """Method to pack data (like constants) into Notion. This method will
         create Notion blocks in the page.
