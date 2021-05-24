@@ -6,8 +6,8 @@ __pycache__/
 # Setup
 *.egg-info/
 
-# Docs
-docs/*
+# Builds
+docs/_build/*
 
 # VS code config
 .vscode/*
