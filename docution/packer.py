@@ -2,17 +2,20 @@ import inspect
 
 
 class BasePacker:
-    def __init__(self, notion, color="blue_background"):
+    def __init__(self, notion, primary="blue_background", secondary="gray_background"):
         """Default Packer. A Packer is a class that convert documentation to
         Notion blocks.
 
         Args:
             notion (docution.NotionAPI): Notion API wrapper.
-            color (str, optional): Color of text to use for the signatures.
+            primary (str, optional): Color of text to use for the signatures.
                 Defaults to "blue_background".
+            secondary (str, optional): Color of text to use for the attributes.
+                Defaults to "gray_background".
         """
         self.notion = notion
-        self.color = color
+        self.primary = primary
+        self.secondary = secondary
 
     def pack_data(self, name, thing, docstring, block):
         """Method to pack data (like constants) into Notion. This method will
@@ -42,8 +45,8 @@ class BasePacker:
 
         # Create the signature
         sig_block = self.empty_paragraph_block()
-        sig_block["paragraph"]["text"].append(self.text_block(f" {var_name}", bold=True, color=self.color))
-        sig_block["paragraph"]["text"].append(self.text_block(f" = {value} ", italic=True, color=self.color))
+        sig_block["paragraph"]["text"].append(self.text_block(f" {var_name}", bold=True, color=self.primary))
+        sig_block["paragraph"]["text"].append(self.text_block(f" = {value} ", italic=True, color=self.primary))
         if dtype is not None:
             sig_block["paragraph"]["text"].append(self.text_block("    "))
             sig_block["paragraph"]["text"].append(self.text_block(dtype, code=True, color="red"))
@@ -90,8 +93,8 @@ class BasePacker:
         else:
             # Create the signature
             sig_block = self.empty_paragraph_block()
-            sig_block["paragraph"]["text"].append(self.text_block(f" {sig_name}", bold=True, color=self.color))
-            sig_block["paragraph"]["text"].append(self.text_block(f" {sig_params} ", italic=True, color=self.color))
+            sig_block["paragraph"]["text"].append(self.text_block(f" {sig_name}", bold=True, color=self.primary))
+            sig_block["paragraph"]["text"].append(self.text_block(f" {sig_params} ", italic=True, color=self.primary))
 
             # Add signature
             self.notion.add_child_to(block["id"], [sig_block])
@@ -177,9 +180,9 @@ class BasePacker:
 
         # Create the signature
         sig_block = self.empty_paragraph_block()
-        sig_block["paragraph"]["text"].append(self.text_block(" class", italic=True, color=self.color))
-        sig_block["paragraph"]["text"].append(self.text_block(f" {cls_name}", bold=True, color=self.color))
-        sig_block["paragraph"]["text"].append(self.text_block(f" {cls_params} ", italic=True, color=self.color))
+        sig_block["paragraph"]["text"].append(self.text_block(" class", italic=True, color=self.primary))
+        sig_block["paragraph"]["text"].append(self.text_block(f" {cls_name}", bold=True, color=self.primary))
+        sig_block["paragraph"]["text"].append(self.text_block(f" {cls_params} ", italic=True, color=self.primary))
 
         # Add signature
         self.notion.add_child_to(block["id"], [sig_block])
@@ -199,16 +202,27 @@ class BasePacker:
             desc_block = sig_block
 
         # Add parameters
-        if len(docstring.params) > 0:
-            param_block = self.header_block("Parameters :")
-            self.notion.add_child_to(desc_block["id"], [param_block])
+        for p in docstring.params:
+            # Add kind of signature
+            space = self.empty_paragraph_block()
+            p_block = self.empty_paragraph_block()
+            p_block["paragraph"]["text"].append(self.text_block(f" {p.arg_name} ", bold=True, color=self.secondary))
+            if p.type_name is not None:
+                p_block["paragraph"]["text"].append(self.text_block("    "))
+                p_block["paragraph"]["text"].append(self.text_block(p.type_name, code=True, color="red"))
 
-            # Retrieve the parameter block
-            *_, param_block = self.notion.block_iterator(desc_block["id"])
+            # Add signature
+            self.notion.add_child_to(desc_block["id"], [space, p_block])
 
-            # Append each parameters
-            p_blocks = self.get_params_blocks(docstring, s)
-            self.notion.add_child_to(param_block["id"], p_blocks)
+            # Retrieve the signature block we just created, to get his ID
+            # To do this, we need to access the last child of the parent block
+            *_, s_block = self.notion.block_iterator(desc_block["id"])
+
+            if p.description is not None:
+                # Add the description of the data
+                d_block = self.empty_paragraph_block()
+                d_block["paragraph"]["text"].append(self.text_block(p.description))
+                self.notion.add_child_to(s_block["id"], [d_block])
 
         return sig_block
 
@@ -242,7 +256,7 @@ class BasePacker:
         for p in docstring.params:
             # Add kind of signature
             p_block = self.empty_paragraph_block()
-            p_block["paragraph"]["text"].append(self.text_block(f" {p.arg_name} ", bold=True, color=self.color))
+            p_block["paragraph"]["text"].append(self.text_block(f" {p.arg_name} ", bold=True, color=self.primary))
             if p.type_name is not None:
                 p_block["paragraph"]["text"].append(self.text_block("    "))
                 p_block["paragraph"]["text"].append(self.text_block(p.type_name, code=True, color="red"))
