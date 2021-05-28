@@ -98,7 +98,16 @@ class Documenter:
         if inspect.ismodule(obj):
             self.packer.pack_module(thing, obj, docstring, block)
         elif inspect.isclass(obj):
-            self.packer.pack_class(thing, obj, docstring, block)
+            sig_block = self.packer.pack_class(thing, obj, docstring, block)
+
+            # When documenting a class, we also should document the constructor
+            # First, check if the constructor is from parent or not
+            cls_name = thing.split(".")[-1]
+            construct = obj.__init__
+            cls_construct = construct.__qualname__.split(".")[-2]
+            if cls_construct == cls_name:
+                docstring = clean_docstring(parse(construct.__doc__))
+                self.packer.pack_routine(construct.__qualname__, construct, docstring, sig_block, skip_sig=True)
         elif inspect.isroutine(obj):
             self.packer.pack_routine(thing, obj, docstring, block)
         else:

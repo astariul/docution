@@ -24,6 +24,9 @@ class BasePacker:
             docstring (docstring_parser.Docstring): Parsed doctring of the
                 object to document.
             block (dict): Notion block descriptor.
+
+        Returns:
+            dict: The Notion block descriptor created.
         """
         # Extract info
         var_name = name.split(".")[-1]
@@ -57,7 +60,9 @@ class BasePacker:
         if len(desc_blocks) > 0:
             self.notion.add_child_to(sig_block["id"], desc_blocks)
 
-    def pack_routine(self, name, thing, docstring, block):
+        return sig_block
+
+    def pack_routine(self, name, thing, docstring, block, skip_sig=False):
         """Method to pack routine (methods and functions) into Notion. This
         method will create Notion blocks in the page.
 
@@ -67,23 +72,33 @@ class BasePacker:
             docstring (docstring_parser.Docstring): Parsed doctring of the
                 object to document.
             block (dict): Notion block descriptor.
+            skip_sig (bool, optional): Whether to skip the signature block or
+                not. Defaults to False.
+
+        Returns:
+            dict: The Notion block descriptor created.
         """
         # Extract info
         sig_name = str(thing.__name__)
         s = inspect.signature(thing)
         sig_params = str(s).replace("->", "→")
 
-        # Create the signature
-        sig_block = self.empty_paragraph_block()
-        sig_block["paragraph"]["text"].append(self.text_block(f" {sig_name}", bold=True, color=self.color))
-        sig_block["paragraph"]["text"].append(self.text_block(f" {sig_params} ", italic=True, color=self.color))
+        if skip_sig:
+            space = self.empty_paragraph_block()
+            self.notion.add_child_to(block["id"], [space])
+            sig_block = block
+        else:
+            # Create the signature
+            sig_block = self.empty_paragraph_block()
+            sig_block["paragraph"]["text"].append(self.text_block(f" {sig_name}", bold=True, color=self.color))
+            sig_block["paragraph"]["text"].append(self.text_block(f" {sig_params} ", italic=True, color=self.color))
 
-        # Add signature
-        self.notion.add_child_to(block["id"], [sig_block])
+            # Add signature
+            self.notion.add_child_to(block["id"], [sig_block])
 
-        # Retrieve the signature block we just created, to get his ID
-        # To do this, we need to access the last child of the parent block
-        *_, sig_block = self.notion.block_iterator(block["id"])
+            # Retrieve the signature block we just created, to get his ID
+            # To do this, we need to access the last child of the parent block
+            *_, sig_block = self.notion.block_iterator(block["id"])
 
         # Add descriptions
         desc_blocks = self.get_description_blocks(docstring)
@@ -139,6 +154,8 @@ class BasePacker:
                 r_block["paragraph"]["text"].append(self.text_block(returns.description))
                 self.notion.add_child_to(ret_block["id"], [r_block])
 
+        return sig_block
+
     def pack_class(self, name, thing, docstring, block):
         """Method to pack classes into Notion. This method will create Notion
         blocks in the page.
@@ -149,6 +166,9 @@ class BasePacker:
             docstring (docstring_parser.Docstring): Parsed doctring of the
                 object to document.
             block (dict): Notion block descriptor.
+
+        Returns:
+            dict: The Notion block descriptor created.
         """
         # Extract info
         cls_name = str(thing.__name__)
@@ -190,6 +210,8 @@ class BasePacker:
             p_blocks = self.get_params_blocks(docstring, s)
             self.notion.add_child_to(param_block["id"], p_blocks)
 
+        return sig_block
+
     def pack_module(self, name, thing, docstring, block):
         """Method to pack modules into Notion. This method will create Notion
         blocks in the page.
@@ -200,6 +222,9 @@ class BasePacker:
             docstring (docstring_parser.Docstring): Parsed doctring of the
                 object to document.
             block (dict): Notion block descriptor.
+
+        Returns:
+            dict: The last Notion block descriptor created.
         """
         # Add description directly, don't put the name of the module.
         desc_blocks = self.get_description_blocks(docstring)
@@ -210,6 +235,8 @@ class BasePacker:
             *_, desc_block = self.notion.block_iterator(block["id"])
         else:
             desc_block = block
+
+        ret_block = desc_block
 
         # Add module level variables, not nested
         for p in docstring.params:
@@ -223,15 +250,18 @@ class BasePacker:
             # Add signature
             self.notion.add_child_to(block["id"], [p_block])
 
-            if p.description is not None:
-                # Retrieve the signature block we just created, to get his ID
-                # To do this, we need to access the last child of the parent block
-                *_, sig_block = self.notion.block_iterator(block["id"])
+            # Retrieve the signature block we just created, to get his ID
+            # To do this, we need to access the last child of the parent block
+            *_, sig_block = self.notion.block_iterator(block["id"])
+            ret_block = sig_block
 
+            if p.description is not None:
                 # Add the description of the data
                 d_block = self.empty_paragraph_block()
                 d_block["paragraph"]["text"].append(self.text_block(p.description))
                 self.notion.add_child_to(sig_block["id"], [d_block])
+
+        return ret_block
 
     def get_description_blocks(self, docstring):
         """Method to create Notion blocks corresponding to the descriptions
