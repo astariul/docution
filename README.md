@@ -51,13 +51,15 @@ A few things are not supported yet by the official Notion API, and will need to 
 
 <h2 align="center">Roadmap</h2>
 
-* Copy-paste ModuleAnalyzer to remove dependency to Sphinx
-* Clean example documentation, no rst, test every possible thing offered by sphinx
+* test every possible thing offered by sphinx (document specific functions, online public members, etc...)
 * Make it usable with a command
 
 
+* Add option for private members, only specific member, etc...
 * Should we add the module name (when documenting module) ? Add option for that ?
 * Should we add only the name of the thing, or the whole path ? Add option for that ?
 * Add option for dryrun
-* Change parser to pardoc ?
+* Change parser to pardoc ? To handle other type of section, like `Example`.
 * Optimize API call to NOT do recursive calling (for now, no choice)
+* Handle markdown ?
+* Handle RST ?

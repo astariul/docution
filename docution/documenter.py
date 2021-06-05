@@ -3,7 +3,7 @@ import inspect
 from pydoc import locate
 
 from docstring_parser import parse
-from sphinx.pycode import ModuleAnalyzer
+from docution.sphinx import ModuleAnalyzer
 
 
 def resolve(thing):
