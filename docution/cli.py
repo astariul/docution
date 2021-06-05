@@ -12,8 +12,8 @@ CMD_REGEX = re.compile(r" */docution +(\S+) *")
 
 
 @click.command()
-@click.argument("auth_token", envvar="DOCUTION_AUTH_TOKEN")
-@click.argument("page_id", envvar="DOCUTION_PAGE_ID")
+@click.option("--auth_token", envvar="DOCUTION_AUTH_TOKEN")
+@click.option("--page_id", envvar="DOCUTION_PAGE_ID")
 def auto_document(auth_token, page_id):
     """Auto-document your Notion pages.
 
