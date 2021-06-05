@@ -103,7 +103,7 @@ def auto_document(auth_token, page_id):
     # Iterate all blocks and if we recognize a docution CMD, document them
     for block in notion.all_children_iterator(page_id):
         # Replace content only if it's a basic text block without childrens
-        if block["type"] != "paragraph" or block["has_children"]:
+        if block["has_children"] or block["type"] != "paragraph" or len(block["paragraph"]["text"]) == 0:
             continue
 
         text = block["paragraph"]["text"][0]["plain_text"]
