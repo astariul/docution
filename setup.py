@@ -12,11 +12,16 @@ setuptools.setup(
     version="0.1",
     author="Nicolas REMOND",
     author_email="nicolas@remond.co",
-    description="Host your API reference on Notion.",
+    description="Auto-document your API reference on Notion.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/astariul/docution",
     packages=setuptools.find_packages(),
+    entry_points={
+        'console_scripts': [
+            'docution = docution.cli:auto_document',
+        ],
+    },
     classifiers=[
         "Programming Language :: Python :: 3.6",
         "Operating System :: OS Independent",

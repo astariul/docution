@@ -52,9 +52,8 @@ A few things are not supported yet by the official Notion API, and will need to 
 <h2 align="center">Roadmap</h2>
 
 * test every possible thing offered by sphinx (document specific functions, online public members, etc...)
-* Make it usable with a command
 
-
+* Add option to specify path of module
 * Add option for private members, only specific member, etc...
 * Should we add the module name (when documenting module) ? Add option for that ?
 * Should we add only the name of the thing, or the whole path ? Add option for that ?
