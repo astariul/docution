@@ -47,3 +47,18 @@ A few things are not supported yet by the official Notion API, and will need to 
 - [ ] **Deletion of the cmd block (`/docution my_module` for example).** For now the API doesn't support deletion, so we can't remove these blocks. Later it should be removed.
 - [ ] **Add dividers.** Dividers are needed to have cleaner outputs. For now the API supports only text-based blocks, so we can't do that.
 - [ ] **Remove recursion.** To access all the blocks of a page, we need to recursively call the API, for each children of children of children of ... This is inefficient. Later we should reduce that number of calls and just call the API once, retrieve everything, create everything, update the content with 1 call.
+
+
+<h2 align="center">Roadmap</h2>
+
+* test every possible thing offered by sphinx (document specific functions, online public members, etc...)
+
+* Add option to specify path of module
+* Add option for private members, only specific member, etc...
+* Should we add the module name (when documenting module) ? Add option for that ?
+* Should we add only the name of the thing, or the whole path ? Add option for that ?
+* Add option for dryrun
+* Change parser to pardoc ? To handle other type of section, like `Example`.
+* Optimize API call to NOT do recursive calling (for now, no choice)
+* Handle markdown ?
+* Handle RST ?

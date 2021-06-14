@@ -13,6 +13,16 @@ cd docs
 make html
 ```
 
+---
+
+On Windows, you can generate it with :
+
+```console
+C:\Users\<username>\AppData\Roaming\Python\Python39\Scripts\sphinx-build docs docs/_build/html
+```
+
+---
+
 Documentation is generated in the folder `docs/_build/html/`.
 
 You can just open `docs/_build/html/index.html` in your browser.
