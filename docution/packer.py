@@ -65,7 +65,7 @@ class BasePacker:
 
         return sig_block
 
-    def pack_routine(self, name, thing, docstring, block, skip_sig=False):
+    def pack_routine(self, name, thing, docstring, block, skip_sig=False, add_empty=True):
         """Method to pack routine (methods and functions) into Notion. This
         method will create Notion blocks in the page.
 
@@ -77,6 +77,9 @@ class BasePacker:
             block (dict): Notion block descriptor.
             skip_sig (bool, optional): Whether to skip the signature block or
                 not. Defaults to False.
+            add_empty (bool, optional): Whether to add an empty block when
+                skipping the signature block. Only used if `skip_sig` is True.
+                Defaults to True.
 
         Returns:
             dict: The Notion block descriptor created.
@@ -87,8 +90,9 @@ class BasePacker:
         sig_params = str(s).replace("->", "→")
 
         if skip_sig:
-            space = self.empty_paragraph_block()
-            self.notion.add_child_to(block["id"], [space])
+            if add_empty:
+                space = self.empty_paragraph_block()
+                self.notion.add_child_to(block["id"], [space])
             sig_block = block
         else:
             # Create the signature

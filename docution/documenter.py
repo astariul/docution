@@ -49,6 +49,9 @@ def clean_docstring(ds):
 
     Args:
         ds (docstring_parser.Docstring): Parsed doctring to clean.
+
+    Returns:
+        ds (docstring_parser.Docstring): Cleaned doctring.
     """
     def _clean(x):
         if x:
@@ -99,6 +102,7 @@ class Documenter:
             self.packer.pack_module(thing, obj, docstring, block)
         elif inspect.isclass(obj):
             sig_block = self.packer.pack_class(thing, obj, docstring, block)
+            has_docstring = docstring.short_description is not None or docstring.long_description is not None
 
             # When documenting a class, we also should document the constructor
             # First, check if the constructor is from parent or not
@@ -107,7 +111,8 @@ class Documenter:
             cls_construct = construct.__qualname__.split(".")[-2]
             if cls_construct == cls_name:
                 docstring = clean_docstring(parse(construct.__doc__))
-                self.packer.pack_routine(construct.__qualname__, construct, docstring, sig_block, skip_sig=True)
+                self.packer.pack_routine(construct.__qualname__, construct, docstring, sig_block, skip_sig=True,
+                                         add_empty=has_docstring)
         elif inspect.isroutine(obj):
             self.packer.pack_routine(thing, obj, docstring, block)
         else:
