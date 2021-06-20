@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="https://user-images.githubusercontent.com/43774355/122677521-988a0a00-d21d-11eb-8222-91d82c4ef546.png" width=200>
+    <img src="https://user-images.githubusercontent.com/43774355/122677521-988a0a00-d21d-11eb-8222-91d82c4ef546.png" width=300>
 </p>
 <p align="center"><b>🚧 This is an <i>alpha</i> version of the project, a proof of concept. Looking for collaborators !</b></p>
 <p align="center">Bring autodoc capabilities to your Notion workspace with Docution</p>
