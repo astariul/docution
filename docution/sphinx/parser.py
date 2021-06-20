@@ -35,7 +35,7 @@ def get_assign_targets(node: ast.AST) -> List[ast.expr]:
         return [node.target]  # type: ignore
 
 
-def get_lvar_names(node: ast.AST, self: ast.arg = None) -> List[str]:
+def get_lvar_names(node: ast.AST, self: ast.arg = None) -> List[str]:   # noqa
     """Convert assignment-AST to variable names.
     This raises `TypeError` if the assignment does not create new variable::
         ary[0] = 'foo'
@@ -339,11 +339,11 @@ class VariableCommentPicker(ast.NodeVisitor):
             elif node.module == 'typing' and name.name == 'overload':
                 self.typing_overload = name.asname or name.name
 
-    def visit_Assign(self, node: ast.Assign) -> None:
+    def visit_Assign(self, node: ast.Assign) -> None:       # noqa
         """Handles Assign node and pick up a variable comment."""
         try:
             targets = get_assign_targets(node)
-            varnames: List[str] = sum([get_lvar_names(t, self=self.get_self()) for t in targets], [])  # NOQA
+            varnames: List[str] = sum([get_lvar_names(t, self=self.get_self()) for t in targets], [])  # noqa
             current_line = self.get_line(node.lineno)
         except TypeError:
             return  # this assignment is not new definition!

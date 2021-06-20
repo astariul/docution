@@ -93,13 +93,13 @@ def module_level_function(param1, param2=None, *args, **kwargs):
 
 def example_generator(n):
     """Generators have a `Yields` section instead of a `Returns` section.
-    
+
     Args:
         n (int): The upper limit of the range to generate, from 0 to `n` - 1.
-    
+
     Yields:
         int: The next number in the range of 0 to `n` - 1.
-    
+
     Examples:
         Examples should be written in doctest format, and should illustrate how
         to use the function.
@@ -115,14 +115,14 @@ class ExampleError(Exception):
     docstring, or as a docstring on the __init__ method itself.
     Either form is acceptable, but the two should not be mixed. Choose one
     convention to document the __init__ method and be consistent with it.
-    
+
     Note:
         Do not include the `self` parameter in the `Args` section.
-    
+
     Args:
         msg (str): Human readable string describing the exception.
         code (int, optional): Error code.
-    
+
     Attributes:
         msg (str): Human readable string describing the exception.
         code (int): Exception error code.
@@ -157,10 +157,10 @@ class ExampleClass(object):
 
         Either form is acceptable, but the two should not be mixed. Choose one
         convention to document the __init__ method and be consistent with it.
-        
+
         Note:
             Do not include the `self` parameter in the `Args` section.
-        
+
         Args:
             param1 (str): Description of `param1`.
             param2 (int, optional): Description of `param2`. Multiple

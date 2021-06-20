@@ -9,7 +9,7 @@ from docution.sphinx import ModuleAnalyzer
 def resolve(thing):
     """Function resolving a name to a python object, trying to import it. After
     importing it, it will extract its docstring.
-    
+
     In case of constant (docstring is not accessible from the `__doc__`
     attribute), we use a copy of the ModuleAnalyzer from sphinx to extract the
     docstring.

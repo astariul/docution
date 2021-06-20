@@ -42,7 +42,7 @@ class ModuleAnalyzer:
     cache: Dict[Tuple[str, str], Any] = {}
 
     @staticmethod
-    def get_module_source(modname: str) -> Tuple[Optional[str], Optional[str]]:
+    def get_module_source(modname: str) -> Tuple[Optional[str], Optional[str]]: # noqa
         """Try to find the source code for a module.
         Returns ('filename', 'source'). One of it can be None if
         no filename or source found

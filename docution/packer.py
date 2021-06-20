@@ -50,7 +50,7 @@ class BasePacker:
         if dtype is not None:
             sig_block["paragraph"]["text"].append(self.text_block("    "))
             sig_block["paragraph"]["text"].append(self.text_block(dtype, code=True, color="red"))
-        
+
         # Add signature
         self.notion.add_child_to(block["id"], [sig_block])
 

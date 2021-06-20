@@ -104,7 +104,7 @@ class _UnparseVisitor(ast.NodeVisitor):
                 name += "=%s" % self.visit(default)
         return name
 
-    def visit_arguments(self, node: ast.arguments) -> str:
+    def visit_arguments(self, node: ast.arguments) -> str:  # noqa
         defaults: List[Optional[ast.expr]] = list(node.defaults)
         positionals = len(node.args)
         posonlyargs = 0
