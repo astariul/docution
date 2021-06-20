@@ -5,7 +5,7 @@
 <p align="center">Bring autodoc capabilities to your Notion workspace with Docution</p>
 
 <p align="center">
-    <a href="https://github.com/astariul/docution/actions"><img src="https://github.com/astariul/docution/workflows/tests/badge.svg" alt="test status" /></a>
+    <a href="https://github.com/astariul/docution/actions/workflows/lint.yml"><img src="https://github.com/astariul/docution/actions/workflows/lint.yml/badge.svg" alt="test status" /></a>
     <a href="https://github.com/astariul/docution/releases"><img src="https://img.shields.io/github/v/release/astariul/docution" alt="release" /></a>
 </p>
 
