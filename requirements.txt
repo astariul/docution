@@ -1,3 +1,0 @@
-notion-client==0.4.*
-docstring_parser==0.7.*
-click==8.0.*
